@@ -14,21 +14,33 @@ function newButton()
    button.group:insert(button.downImage)
    button.downImage.isVisible = false
 
+   function button:isDown()
+      return button.upImage.isVisible
+   end
+
+   function button:setDown(downFlag)
+      if downFlag then
+         media.playEventSound(clickSound)
+         self.upImage.isVisible = false
+         self.downImage.isVisible = true
+      else
+      	 self.upImage.isVisible = true
+      	 self.downImage.isVisible = false
+      end
+   end
+
    button.isFocus = false
 
    function button:touch(event)
       if "began" == event.phase then
-         media.playEventSound(clickSound)
-         self.upImage.isVisible = false
-         self.downImage.isVisible = true
+	 self:setDown(true)
 
          -- Send subsequent events here.
          display.getCurrentStage():setFocus(self.group, event.id)
          self.isFocus = true
       elseif self.isFocus then
          if ("ended" == event.phase) or ("cancelled" == event.phase) then
-            self.upImage.isVisible = true
-            self.downImage.isVisible = false
+	    self:setDown(false)
 
             -- Stop grabbing events.
             display.getCurrentStage():setFocus(self.group, nil)
