@@ -12,3 +12,8 @@ require 'buttonModule'
 local button = buttonModule.newButton()
 button:setGridToBottom()
 button:setGridPosition(0, 0)
+
+local myListener = function(event)
+   print("Event " .. event.name)
+end
+button:addEventListener("click", myListener)

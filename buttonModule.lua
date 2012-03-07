@@ -21,10 +21,13 @@ function newButton()
    button.group.yReference = button.group.height/2
 
    function button:isDown()
-      return button.upImage.isVisible
+      return button.downImage.isVisible
    end
 
    function button:setDown(downFlag)
+      if self:isDown() == downFlag then
+	 return
+      end
       if downFlag then
          media.playEventSound(clickSound)
          self.upImage.isVisible = false
@@ -129,6 +132,32 @@ function newButton()
 
    button.isFocus = false
 
+   -- Returns true if the screen coordinates x and y are located within
+   -- this button.  It does not check whether the button is visible.
+   function button:isInside(x, y)
+      local buttonWidth = self.group.width
+      local buttonHeight = self.group.height
+      local buttonX = self.group.x - (buttonWidth/2)
+      local buttonY = self.group.y - (buttonHeight/2)
+      if (x >= buttonX) and
+	 (x <= buttonX + buttonWidth) and
+	 (y >= buttonY) and
+	 (y <= buttonY + buttonHeight) then
+	 return true
+      end
+      return false
+   end
+
+   function button:addEventListener(eventName, eventListener)
+      self.group:addEventListener(eventName, eventListener)
+   end
+   function button:removeEventListener(eventName, eventListener)
+      self.group:removeEventListener(eventName, eventListener)
+   end
+   function button:dispatchEvent(event)
+      self.group:dispatchEvent(event)
+   end
+
    function button:touch(event)
       if "began" == event.phase then
 	 self:setDown(true)
@@ -137,8 +166,16 @@ function newButton()
          display.getCurrentStage():setFocus(self.group, event.id)
          self.isFocus = true
       elseif self.isFocus then
+	 local inside = self:isInside(event.x, event.y)
+	 self:setDown(inside)
          if ("ended" == event.phase) or ("cancelled" == event.phase) then
 	    self:setDown(false)
+
+	    -- Dispatch the click event, but only if still inside.
+	    if inside then
+	       local clickEvent = { name="click", target=self }
+	       self:dispatchEvent(clickEvent)
+	    end
 
             -- Stop grabbing events.
             display.getCurrentStage():setFocus(self.group, nil)
@@ -146,7 +183,7 @@ function newButton()
          end
       end
    end
-   button.group:addEventListener("touch", button)
+   button:addEventListener("touch", button)
 
    return button
 end
